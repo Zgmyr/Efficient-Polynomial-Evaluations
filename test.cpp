@@ -1,27 +1,65 @@
 // messing around with <gmpxx.h>
 
 #include <iostream>
-#include <gmpxx.h>
 #include <limits>
+#include <fstream>
+#include <random>
 using namespace std;
 
 int main() {
 
-    mpz_t x;
-    mpz_init_set_ui(x,21474);
+    // cerr << "ERROR MESSAGE HERE" << endl;
+    // exit(1);
+    // cout << "Will i execute?" << endl;
 
-    mpz_t y;
-    mpz_init_set_si(y,-54);
+    /* RAND TEST */
+    random_device myEngine;
+    uniform_int_distribution<int> randInt(0,100);
 
-    // mpz_t result;
-    // mpz_init(result);
+    int x = randInt(myEngine);
+    cout << "(1) RANDOM INT = " << x << endl;
 
-    // mpz_add(result,x,y);
+    x = randInt(myEngine);
+    cout << "(2) AGAIN = " << x << endl;
+    
+    cout << "THREE MORE TIMES:" << endl;
+    for (int i = 0; i < 3; i++)
+    {
+        x = randInt(myEngine);
+        cout << x << endl;
+    }
 
-    // cout << "RESULT = " << result << endl;
+    /* FILE OUTPUT TEST */
+    // ofstream oFile("testdoc.txt", ios::app);
+    
+    // if (oFile.is_open()) {
+    //     cout << "Opened file" << endl;
 
-    cout << mpz_sgn(x) << endl;
-    cout << mpz_sgn(y) << endl;
+    //     oFile << "Hello World!" << endl;
+
+    //     oFile << "New LINE!" << endl;
+    // }
+    // else {
+    //     cout << "FILE NOT OPENED" << endl;
+    // }
+
+    // oFile.close();
+
+
+    /* FILE INPUT/READ TEST */
+    // ifstream iFile("testdoc.txt");
+
+    // string input;
+    // if (iFile) {
+    //     cout << "File opened" << endl;
+        
+    //     while (iFile >> input)
+    //     {
+    //         cout << input << endl;
+    //     }
+
+    //     iFile.close();
+    // }
     
     return 0;
 }
