@@ -14,3 +14,36 @@ algorithm1(coefficients,x,n)
 - display response time
 
 (SAME FOR ALGIRHTMS 2 and 3)
+
+
+PSEUDOCODE:
+
+DRIVER:
+    MENU:
+        1. GENERATE NEW DATA
+        2. USE EXISTING DATA
+    (1) DO:
+        ASK FOR N and D
+        PASS N and D TO GENERATE COEFF&VAR TO UPDATE DATA
+    (2) SKIP...
+
+    INITIALIZE VECTOR TO HOLD COEFFICIENTS & X
+    VERIFY THAT VECTOR & X CONTAINS VALUES
+
+    MENU:
+        1. BRUTE
+        2. REPEATED
+        3. HORNERS
+    
+    (1 | 2 | 3) DO:
+        PASS IN VECTOR OF COEFF TO ALGORITHM 
+        START TIMER
+        EVALUATES
+        END TIMER
+
+GENERATE VAR&COEFF:
+    OPEN FILE FOR WRITING
+    FOR N+1 ITERATIONS:
+        GENERATE RANDOM # & CONVERT TO DIGIT SIZE D
+        WRITE TO FILE
+    CLOSE FILE
