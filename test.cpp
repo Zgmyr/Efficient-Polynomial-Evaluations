@@ -14,28 +14,23 @@ int main() {
 
 
 
-    // vector<mpz_class> vector1;
+    /* Vector<mpz_class> Testing */
+    // unit test, messing with mpz_class
+    /* std::cout << "Last element: " << coeffVector.back() << "\n";
+    mpz_class a = coeffVector.back();
+    coeffVector.pop_back();
 
-    // mpz_class val1 = 123456789;
-    // mpz_class val2 = 987654321;
+    std::cout << "Last element: " << coeffVector.back() << "\n";
+    mpz_class b = coeffVector.back();
+    coeffVector.pop_back();
+    std::cout << "Last element: " << coeffVector.back() << "\n";
 
-    // vector1.push_back(val1);
-    // vector1.push_back(val2);
+    mpz_class sum = a + b;
+    std::cout << "sum = " << sum << "\n"; */
 
-    // for (const auto& v : vector1) {
-    //     cout << v << endl;
-    // }
 
-    int arr1[100];
-    for (int i=0;i<100;i++) {
-        arr1[i] = i;
-    }
-    for (int& e : arr1) {
-        e *= 5;
-    }
-    for (const int& e : arr1) {
-        cout << e << endl;
-    }
+
+
 
 
 

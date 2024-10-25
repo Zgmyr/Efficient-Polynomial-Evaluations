@@ -3,9 +3,9 @@
 #include <gmpxx.h>
 #include <math.h>
 #include <chrono>
-
-using namespace std::chrono;
-using namespace std;
+#include <limits>
+#include <cstdlib>
+#include <vector>
 
 #define FILEPATH "coeffAndVars.txt"
 
@@ -13,6 +13,88 @@ using namespace std;
 void generateCoeffAndVars(int,int);
 
 int main() {
+
+    // controls for first menu
+    int choice;
+    bool isFinished = false;
+
+    std::cout << "=== Menu ===\n";
+    std::cout << "For the general form polynomial P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n\n";
+    std::cout << "1. Generate new coefficient data\n";
+    std::cout << "2. Read existing coefficient data from file\n"
+        << "(for the first time running this program, please choose option '1')\n";
+
+    // MENU 1: Generating Coefficient Data or Use Existing
+    while (!isFinished) {
+        std::cout << "\nEnter your choice (1 or 2): ";
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
+
+        switch (choice) {
+            case 1:
+                std::cout << "Enter a value n for the degree of polynomial P(x): ";
+
+                int degree;
+                std::cin >> degree;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
+                
+                std::cout << "Enter a value d for the digit size of coefficients to be generated: ";
+                int digits;
+                std::cin >> digits;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
+                
+                generateCoeffAndVars(degree,digits);
+
+                isFinished = true;
+                break;
+            case 2:
+                isFinished = true;
+                break;
+            default:
+                std::cout << "Invalid choice. Please enter a number between 1 and 3.\n";
+        }
+    }
+
+    // open generated (or previously existing) coefficient data for reading
+    std::ifstream inFile(FILEPATH);
+
+    // verify file opened properly or report error and end
+    if (inFile.is_open()) {
+        std::cout << "> Reading coefficients from " << FILEPATH << "\n";
+    }
+    else {
+        std::cout << "\nError in opening file 'coeffAndVars.txt' for reading. Ending program...\n";
+        exit(1);
+    }
+
+    /* Gathering Polynomial Data from External File (value of x and coefficients) */
+
+    // getting value x from file (first entry)
+    int x;
+    inFile >> x;
+    inFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear input buffer after reading x
+ 
+    // initialize vector to store large coefficients
+    std::vector<mpz_class> coeffVector;
+    std::string line;
+
+    // read the file & store each coefficient in coeffVector
+    while (getline(inFile, line)) {
+        mpz_class num(line); // convert each line into mpz_class (stores large scientific numbers)
+        coeffVector.push_back(num); // store in mpz_class vector
+    }
+
+    // validation: vector is not empty
+    if (coeffVector.size() == 0) {
+        std::cout << "\nError: no data was received from 'coeffAndVars.txt'. Run program again and generate new values!\n";
+        exit(1);
+    }
+
+    // DEBUG: test code to ensure reading data properly
+    mpz_class last = coeffVector.back();
+    std::cout << "last value = " << last << "\n";
+    inFile.close();
+
 
     /* 
     DRIVER:
@@ -45,8 +127,6 @@ int main() {
     
     */
 
-   generateCoeffAndVars(35,25);
-
    return 0;
 }
 
@@ -60,29 +140,36 @@ void generateCoeffAndVars(int n, int d) {
     /* time_point<steady_clock> start_time = steady_clock::now(); */
 
     // Validation: ensure n and d are at least 1
-    if (n < 1 || d < 1)
+    while (n < 1 || d < 1)
     {
-        cerr << "Both n and d must be at least 1." << endl;
-        return;
+        std::cout << "\nError: both 'n' and 'd' must be greater than 1. Try again.\n\n";
+        
+        std::cout << "Enter a new value n (greater than 1) for the degree of polynomial P(x): ";
+        std::cin >> n;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
+
+        std::cout << "Enter a new value d (greater than 1) for the digit size of coefficients to be generated: ";
+        std::cin >> d;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
     }
 
     // initialize output file
-    ofstream inFile(FILEPATH);
+    std::ofstream outFile(FILEPATH);
 
     // ensure file opened properly
-    if (inFile.is_open()) {
-        cout << "> Generating " << n+1 << " new " << d << "-digit coefficient values in "
-            << "'coeffAndVars.txt' ..." << endl;
+    if (outFile.is_open()) {
+        std::cout << "> Generating " << n+1 << " new " << d << "-digit coefficient values in "
+            << "'coeffAndVars.txt' ...\n";
     }
     else {
-        cout << "Error in opening file 'coeffAndVars.txt' for writing. Ending program..." << endl;
+        std::cout << "Error in opening file 'coeffAndVars.txt' for writing. Ending program...\n";
         exit(1);
     }
 
     // generate random value for 'x' & write to file
-    srand(time(0)); // random seed
+    std::srand(time(0)); // random seed
     int x = rand() % 100 + 1; // range is from 1 to 100, for simplicity
-    inFile << x << endl;
+    outFile << x << "\n";
 
     /* Initialize random state for large random number generation */
     gmp_randstate_t rand_state;
@@ -103,17 +190,17 @@ void generateCoeffAndVars(int n, int d) {
         // generate random number of 'd'-digits using bitcount of 'd'
         mpz_rrandomb(random_num, rand_state, bit_count);
 
-        inFile << random_num << endl;
+        outFile << random_num << "\n";
 
         mpz_clear(random_num); // cleanup
     }
 
     // cleanup GMP & close file
     gmp_randclear(rand_state);
-    inFile.close();
+    outFile.close();
 
     // report successful operation
-    cout << "> 'coeffAndVars.txt' has successfully been updated with new coefficient values!" << endl;
+    std::cout << "> 'coeffAndVars.txt' has successfully been updated with new coefficient values!\n";
 
     // DEBUG - use this to see evaluation time of coefficient generation
     /* duration<double> eval_time = steady_clock::now() - start_time;
