@@ -7,10 +7,42 @@
 // #include <math.h>
 #include <gmpxx.h>
 #include <vector>
+#include <deque>
 using namespace std;
 // using namespace std::chrono;
 
 int main() {
+
+    int x = 4;
+    int degree = 2;
+    mpz_class var_expr = 1;
+    for (int n = 0; n < degree; n++) {
+            var_expr *= x;
+    }
+    std::cout << "var_expr = " << var_expr << "\n";
+
+
+
+
+
+
+    /* DEQUE TESTING 
+    (remembering how to work with DEQUE's)*/
+    /* std::deque<int> myDEQUE = {1,2,3,4};
+    std::cout << "First element = " << myDEQUE.front() << "\n";
+    std::cout << "Size = " << myDEQUE.size() << "\n";
+
+    int first = myDEQUE.front();
+    myDEQUE.pop_front();
+
+    std::cout << "First element (popped) = " << first << "\n";
+    std::cout << "New first element = " << myDEQUE.front() << "\n";
+    std::cout << "Size = " << myDEQUE.size() << "\n";
+
+    for (auto& e : myDEQUE) {
+        std::cout << e << " ";
+    }
+    std::cout << "\nEND\n"; */
 
 
 

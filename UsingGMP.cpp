@@ -62,6 +62,7 @@ int main() {
 
 // Function to evaluate the polynomial P(x,n) = 1 + x + 2x^2 + 3x^2 + ... + nx^n
 // NOTE: this function assumes x is an unsigned (positive) integer
+// UPDATE: we should use mpz_class from GMP library, mpz_t is more verbose and does not support operator overloading!
 void testPolynomial(mpz_t result, int x, int n) {
     
     // initialize result to 0

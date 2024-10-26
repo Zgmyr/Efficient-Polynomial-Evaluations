@@ -5,12 +5,16 @@
 #include <chrono>
 #include <limits>
 #include <cstdlib>
-#include <vector>
+#include <vector> // NOTE: switching from vectors to double-ended queues to have front-pop functionality
+#include <deque>
 
 #define FILEPATH "coeffAndVars.txt"
 
 // prototype for generating coefficients & variables
 void generateCoeffAndVars(int,int);
+
+// prototype for bruteForceAlgorithm
+mpz_class bruteForceAlgorithm(std::chrono::duration<double>&, int, std::deque<mpz_class>);
 
 int main() {
 
@@ -18,13 +22,14 @@ int main() {
     int choice;
     bool isFinished = false;
 
-    std::cout << "=== Menu ===\n";
+    // prompt for first menu
+    std::cout << "=== Coefficient Data ===\n";
     std::cout << "For the general form polynomial P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n\n";
     std::cout << "1. Generate new coefficient data\n";
     std::cout << "2. Read existing coefficient data from file\n"
         << "(for the first time running this program, please choose option '1')\n";
 
-    // MENU 1: Generating Coefficient Data or Use Existing
+    /* MENU 1: Generating Coefficient Data or Use Existing */
     while (!isFinished) {
         std::cout << "\nEnter your choice (1 or 2): ";
         std::cin >> choice;
@@ -51,7 +56,7 @@ int main() {
                 isFinished = true;
                 break;
             default:
-                std::cout << "Invalid choice. Please enter a number between 1 and 3.\n";
+                std::cout << "Invalid choice. Please enter a number 1 or 2.\n";
         }
     }
 
@@ -67,34 +72,89 @@ int main() {
         exit(1);
     }
 
-    /* Gathering Polynomial Data from External File (value of x and coefficients) */
+    /* Gathering Polynomial Data from External File (value of x and coefficients).
+        The values to be passed into our polynomial algorithms:
+        1. value of x
+        2. coefficients (deque)
+        3. chrono duration to measure evaluation time */
 
     // getting value x from file (first entry)
     int x;
     inFile >> x;
     inFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear input buffer after reading x
  
-    // initialize vector to store large coefficients
-    std::vector<mpz_class> coeffVector;
+    // initialize deque to store large coefficients
+    std::deque<mpz_class> coeffDeque;
     std::string line;
 
-    // read the file & store each coefficient in coeffVector
+    // initialize time variable to keep track of evaluation time (NOTE: this should be passed to our polynomial functions by reference)
+    std::chrono::duration<double> elapsed_time;
+
+    // initialize an mpz_class to store result of our polynomial evaluation (this may be a LARGE nubmer!!!!)
+    mpz_class result;
+
+    // read the file & store each coefficient in coeffDeque
     while (getline(inFile, line)) {
         mpz_class num(line); // convert each line into mpz_class (stores large scientific numbers)
-        coeffVector.push_back(num); // store in mpz_class vector
+        coeffDeque.push_back(num); // store in mpz_class deque
     }
 
-    // validation: vector is not empty
-    if (coeffVector.size() == 0) {
+    // validation: deque is not empty
+    if (coeffDeque.size() == 0) {
         std::cout << "\nError: no data was received from 'coeffAndVars.txt'. Run program again and generate new values!\n";
         exit(1);
     }
 
+
+
+
     // DEBUG: test code to ensure reading data properly
-    mpz_class last = coeffVector.back();
-    std::cout << "last value = " << last << "\n";
+    mpz_class last = coeffDeque.back();
+    std::cout << "DEBUG: last value = " << last << "\n";
+    std::cout << "DEBUG: deque size = " << coeffDeque.size() << "\n";
+    std::cout << "DEBUG: first value = " << coeffDeque.front() << "\n";
     inFile.close();
 
+
+
+
+    // reset controls for second menu
+    isFinished = false;
+
+    // prompt for second menu
+    std::cout << "\n=== Evaluation Algorithm ===\n";
+    std::cout << "For the general form polynomial P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n\n";
+    std::cout << "1. Run Brute Force Algorithm\n";
+    std::cout << "2. Run Repeated Squares Algorithm\n";
+    std::cout << "3. Run Horner's Rule Algorithm\n";
+
+    /* MENU 2: Which algorithm to run? */
+    while (!isFinished) {
+        std::cout << "\nEnter your choice (1 | 2 | 3): ";
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear buffer
+
+        switch (choice) {
+            case 1:
+                std::cout << "DEBUG: running brute force\n";
+                result = bruteForceAlgorithm(elapsed_time,x,coeffDeque);
+                isFinished = true;
+                break;
+            case 2:
+                std::cout << "DEBUG: running repeated squares\n";
+                isFinished = true;
+                break;
+            case 3:
+                std::cout << "DEBUG: running horner's rule\n";
+                isFinished = true;
+            default:
+                std::cout << "Invalid choice. Please enter a number between 1 and 3.\n";
+        }
+    }
+
+    std::cout << "result = " << result << "\n";
+    std::cout << "elapsed time (ms) = " << elapsed_time.count() * 1000 << "\n";
+    std::cout << "DEBUG: PROGRAM END\n";
 
     /* 
     DRIVER:
@@ -107,23 +167,23 @@ int main() {
     (2) SKIP...
 
     INITIALIZE FILE FOR READING FROM FILEPATH MACRO
-    INITIALIZE VECTOR TO HOLD COEFFICIENTS & X
+    INITIALIZE DEQUE TO HOLD COEFFICIENTS & X
     ITERATE THROUGH UNTIL EMTPY:
-        CONVERT THE LINE INTO mpz_class AND STORE IN VECTOR
+        CONVERT THE LINE INTO mpz_class AND STORE IN DEQUE
 
-       *** => make sure to use &reference in range-based for loop later for reading from vector (this might get LARGE for large values n)
+       *** => make sure to use &reference in range-based for loop later for reading from deque (this might get LARGE for large values n)
 
     MENU:
         1. BRUTE
         2. REPEATED
         3. HORNERS
     (1 | 2 | 3) DO:
-        PASS IN VECTOR OF COEFF TO ALGORITHM 
+        PASS IN DEQUE OF COEFF TO ALGORITHM 
         START TIMER
         EVALUATES
         END TIMER
 
-       *** => will need to re-do the brute force algorithm for general case polynomial using coefficients read from vector
+       *** => will need to re-do the brute force algorithm for general case polynomial using coefficients read from deque
     
     */
 
@@ -209,4 +269,65 @@ void generateCoeffAndVars(int n, int d) {
     double eval_ms = eval_s * 1000;
 
     cout << "Process time (ms): " << eval_ms << endl; */
+}
+
+mpz_class bruteForceAlgorithm(std::chrono::duration<double>& t, int x, std::deque<mpz_class> coefficients) {
+    using namespace std::chrono;
+    // EVALUATING: P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n => BRUTE FORCE
+    
+    // mark the start time of evaluating this algorithm
+    time_point<steady_clock> start_time = steady_clock::now();
+
+    // accumulator to be returned
+    mpz_class result;
+
+    // pop the constant (a_0) and add to result
+    result += coefficients.front();
+    coefficients.pop_front();
+
+    // counter to keep track of current term
+    int degree = 1;
+
+    // loop through each coefficient & calculate each term of polynomial by hand
+    for (auto& coeff : coefficients) {
+        // initialize temp variables to store variable expression (x^n)
+        mpz_class var_expr = 1;
+
+        // calculate each and every multiplication of the x term with brute force
+        for (int n = 0; n < degree; n++) {
+            var_expr *= x; // multiplying x for 'n' times
+        }
+
+        // increment to next term
+        degree++;
+
+        // add current term to result
+        result += coeff * var_expr;
+    }
+
+    /* PSEUDOCODE:
+        P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n
+        GIVEN: x, deque of mpz_class's
+            - deque.size() = n
+            - will need to loop 'n' times to evaluate, skipping the first when multiplying x
+    
+        .mark start time
+        .initialize result variable (mpz_class type)
+        .pop the constant (a_0) and add to result
+        
+        (range-based) for each element of coefficient vectors:
+            use counter 'n' to keep track of degree (starting with n=1, x^1)
+            for each value of n:
+                multiply x by itself to determine x^n (variable expression)
+            calculate term as current coefficient * variable expression
+            add this subexpression (c * x^n) to result
+        mark end time
+        return result
+     */
+
+    // mark the end time of evaluating this algorithm, & update the evaluation time in driver
+    time_point<steady_clock> end_time = steady_clock::now();
+    t = end_time - start_time;
+
+    return result;
 }
