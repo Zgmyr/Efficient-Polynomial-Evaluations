@@ -1,16 +1,14 @@
 # Efficient-Polynomial-Evaluation
 This project was completed for Design & Analysis of Algorithms (CS3130) with the University of Missouri-St Louis.
 #### Introduction
-In this project, we compare three different algorithms that are used to evaluate polynomials. The goal is to understand the importance of efficiency of an algorithm. The three algorithms used are (1) Brute Force, (2) Repeated Squares, and (3) Horner's Rule. The polynomials to be evaluated have the following general form:
-$$P(x) = a_0+a_1x+a_2x^2+...+a_nx^n$$
+In this project, we compare three different algorithms that are used to evaluate polynomials. The goal is to understand the importance of efficiency of an algorithm. The three algorithms used are (1) Brute Force, (2) Repeated Squares, and (3) Horner's Rule. The polynomials to be evaluated have the following general form: $$P(x) = a_0+a_1x+a_2x^2+...+a_nx^n$$<br>
 When evaluating these three algorithms, we store data for this polynomial in an external file `coeffAndVars.txt`, containing information on a randomly generated value `x`, the degree `n` of the polynomial stored in the file, the value `d` corresponding to the `d`-sized digits used to generate coefficient data, and `n+1` coefficients (including the constant $a_0$).
 #### Exploration of Overflow Error and Use of GNU Multiple Precision
 In the files `OverflowProblem.cpp` and `UsingGMP.cpp` we explore the overflow error and solution to this problem by using the `<gmpxx.h>` library. Overflow occurs when performing arithmetic operations on values resulting in a value beyond the range of that data type. In C++, a signed 32-bit integer has the range of -2,147,483,648 to 2,147,483,647.
 
 `OverflowProblem.cpp` demonstrates a simple brute force calculation of the Polynomial $P(x)=1+x+2x^2+3x^3+...+nx^n$. We see that for larger inputs of `x` and `n`, overflow occurs returning a negative number. This problem is solved in `UsingGMP.cpp` by using the GNU Multi-Precision library. This library contains data types that allow for arithmetic operations on extremely large numbers, which is necessary for evaluating extremely large polynomials. In the example used, we are able to calculate the above polynomial for when `x` is 123 and `n` is 25.
 #### Three Algorithms
-In `EfficientPolyEval.cpp` we explore the issue of evaluating the following general-form polynomial using brute force, repeated squares, and Horner's rule:
-$$P(x) = a_0+a_1x+a_2x^2+...+a_nx^n$$
+In `EfficientPolyEval.cpp` we explore the issue of evaluating the following general-form polynomial using brute force, repeated squares, and Horner's rule: $$P(x) = a_0+a_1x+a_2x^2+...+a_nx^n$$<br><br>
 (1) Our brute force algorithm in `EfficientPolyEval.cpp` calculates each multiplication of x by hand (i.e. x is multiplied explicitly `n` number of times at each degree `n` of our polynomial).
 
 (2) The repeated squares algorithm calculates each multiplication of x using repeated squaring technique via a helper function `power()`. Using this function, we are able to efficiently calculate the power of a given base using GNU multiple precision library to avoid overflow error (as opposed to simply using `pow()` from `<math.h>`, which would cause overflow working with extremely large values). A given example of using this technique may be seen when calling `power(2,9)`, in which we calculate $x^9$ by first calculating $x * x^8$, and $x^8$ is determined by $x^4 * x^4$, where $x^4$ is calculated from $x^2 * x^2$, and $x^2$ is of course $x * x$.
@@ -35,9 +33,12 @@ We can run our program `EfficientPolyEval.cpp` and generate our `x` and coeffici
 | n = 3782<br>d = 4183 | 438.42           | 65.7638               | 1.018             |
 | n = 3782<br>d = 4183 | 436.045          | 69.3092               | 0.9051            |
 | n = 3782<br>d = 4183 | 429.566          | 59.4561               | 0.9417            |
-With smaller values of `n` and `d` we see that brute force performs better than repeated squares, but as `n` and `d` become greater, repeated squares outperforms. in execution time. Horner's rule in all trials performed better than both brute force and repeated squares. We can conclude that Horner's Rule resulted consistently in the fastest execution times regardless of values for `n` and `d`.
 
-This is consistent with our understanding of the time complexity for these three algorithms:
-Brute Force: $O(n^2)$
-Repeated Squaring: $O(nlogn)$
-Horner's Rule: $O(n)$
+With smaller values of `n` and `d` we see that brute force performs better than repeated squares, but as `n` and `d` become greater, repeated squares outperforms in execution time. Horner's rule in all trials performed better than both brute force and repeated squares. We can conclude that Horner's Rule resulted consistently in the fastest execution times regardless of values for `n` and `d`.
+
+This is consistent with our understanding of the time complexity for these three algorithms:<br>
+Brute Force: $O(n^2)$<br>
+Repeated Squaring: $O(nlogn)$<br>
+Horner's Rule: $O(n)$<br>
+
+![Graph](https://github.com/user-attachments/assets/21d2a925-854f-4d0b-8b45-f970ba9bf878)
