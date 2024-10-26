@@ -1,8 +1,20 @@
 // Zachary Gmyr
 // 3130-001
+// October 25, 2024
 // Project 1: Evaluating Polynomials
 
-/* Description: 
+/* Description: This program uses three different algorithms to evaluate the polynomial P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n.
+    (1) Brute Force       -> O(n^2)
+    (2) Repeated Squares  -> O(nlogn)
+    (3) Horner's Rule     -> O(n)
+
+    We use an external file 'coeffAndVars.txt' in order to generate and store data for our polynomial such as the value for x, the size
+    'n' of our polynomial, size 'd'-digits of our coefficients, and the coefficients themselves. This file is read by our driver and fed
+    into one of the three algorithms for evaluation. In order to compute extremely large polynomials and avoid overflow error in the
+    cases where large values are entered for 'n' and 'd', we use GNU Multiple Precision library (<gmpxx.h>). In order to measure evaluation
+    time of each of our algorithms we use the chrono library (<chrono>) and mark a time_point at the beginning and end of each function.
+    Evaluation time is determined by subtracting the start point from the end point. For further information about this project, refer
+    to the README.md file.
     */
 
 #include <iostream>
