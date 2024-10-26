@@ -14,6 +14,16 @@
     As a result of using mpz_t types for polynomial evaluation, we can evaluate extremely large polynomials
     and should observe that for the standard polynomial P(x,n) = 1 + x + 2x^2 + 3x^2 + ... + nx^n, that the
     result P(123,25) can be calculated without overflow (i.e. a positive integer is returned).
+
+    NOTE: in EfficientPolyEval.cpp we use mpz_class types instead of mpz_t for two reasons:
+        (1) mpz_class is C++'s class wrapper for mpz_t, including a constructor, destructor, and other methods
+            to manage memory efficiently. mpz_t is a C-style struct without these features. We are able to
+            create mpz_class std::deque's whereas mpz_t types are not compatible with std::deque's. We want a
+            data type we can use to store extremely large scientific numbers in a linked list, so we use
+            mpz_class.
+        (2) mpz_class supports operator overloading unlike mpz_t, which makes it easier to perform arithmetic
+            operations. As we see in testPolynomial function below, arithmetic operations with mpz_t become
+            verbose and decrease readability.
     */
 
 #include <iostream>

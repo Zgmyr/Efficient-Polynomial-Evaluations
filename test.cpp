@@ -4,22 +4,45 @@
 // #include <fstream>
 // #include <chrono>
 // #include <thread>
-// #include <math.h>
+#include <math.h>
 #include <gmpxx.h>
 #include <vector>
 #include <deque>
+#include <algorithm>
 using namespace std;
 // using namespace std::chrono;
 
 int main() {
 
-    int x = 4;
+    std::deque<mpz_class> myDeque = {1,2,3,4,5};
+
+    std::reverse(myDeque.begin(),myDeque.end());
+
+    for (const auto& e : myDeque) {
+        std::cout << e << " ";
+    }
+
+
+
+
+
+    // DEMONSTRATION of OVERFLOW using pow() from <math.h>
+    /* int x = pow(523344,15133);
+    cout << "x = " << x << "\n"; */
+
+
+
+
+
+
+    /* BRUTE FORCE TESTING (multiply x for n-number of times) */
+    /* int x = 4;
     int degree = 2;
     mpz_class var_expr = 1;
     for (int n = 0; n < degree; n++) {
             var_expr *= x;
     }
-    std::cout << "var_expr = " << var_expr << "\n";
+    std::cout << "var_expr = " << var_expr << "\n"; */
 
 
 

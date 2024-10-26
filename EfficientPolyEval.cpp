@@ -1,3 +1,10 @@
+// Zachary Gmyr
+// 3130-001
+// Project 1: Evaluating Polynomials
+
+/* Description: 
+    */
+
 #include <iostream>
 #include <fstream>
 #include <gmpxx.h>
@@ -5,16 +12,20 @@
 #include <chrono>
 #include <limits>
 #include <cstdlib>
-#include <vector> // NOTE: switching from vectors to double-ended queues to have front-pop functionality
 #include <deque>
+#include <algorithm>
 
-#define FILEPATH "coeffAndVars.txt"
+#define FILEPATH "coeffAndVars.txt" // external file, will write x, n, d and coefficient values to
 
-// prototype for generating coefficients & variables
+/* Function Prototypes */
+
 void generateCoeffAndVars(int,int);
 
-// prototype for bruteForceAlgorithm
 mpz_class bruteForceAlgorithm(std::chrono::duration<double>&, int, std::deque<mpz_class>);
+
+mpz_class repeatedSquaringAlgorithm(std::chrono::duration<double>&, int, const std::deque<mpz_class>);
+
+mpz_class hornersRuleAlgorithm(std::chrono::duration<double>&, int, const std::deque<mpz_class>);
 
 int main() {
 
@@ -78,10 +89,13 @@ int main() {
         2. coefficients (deque)
         3. chrono duration to measure evaluation time */
 
-    // getting value x from file (first entry)
-    int x;
+    // getting values x, n, and d from file (first line)
+    int x, n, d;
     inFile >> x;
-    inFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear input buffer after reading x
+    inFile >> n;
+    inFile >> d;
+
+    inFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n'); // clear input buffer after reading first line
  
     // initialize deque to store large coefficients
     std::deque<mpz_class> coeffDeque;
@@ -105,18 +119,8 @@ int main() {
         exit(1);
     }
 
-
-
-
-    // DEBUG: test code to ensure reading data properly
-    mpz_class last = coeffDeque.back();
-    std::cout << "DEBUG: last value = " << last << "\n";
-    std::cout << "DEBUG: deque size = " << coeffDeque.size() << "\n";
-    std::cout << "DEBUG: first value = " << coeffDeque.front() << "\n";
+    // close coefficient data file
     inFile.close();
-
-
-
 
     // reset controls for second menu
     isFinished = false;
@@ -136,16 +140,20 @@ int main() {
 
         switch (choice) {
             case 1:
-                std::cout << "DEBUG: running brute force\n";
+                std::cout << "Evaluating P(x) using brute force: x = " << x << ", n = " << n << ", d = " << d << "\n";
                 result = bruteForceAlgorithm(elapsed_time,x,coeffDeque);
                 isFinished = true;
                 break;
             case 2:
-                std::cout << "DEBUG: running repeated squares\n";
+                std::cout << "Evaluating P(x) using repeated squares: x = " << x << ", n = " << n << ", d = " << d << "\n";
+                result = repeatedSquaringAlgorithm(elapsed_time,x,coeffDeque);
                 isFinished = true;
                 break;
             case 3:
-                std::cout << "DEBUG: running horner's rule\n";
+                std::cout << "Evaluating P(x) using horner's rule: x = " << x << ", n = " << n << ", d = " << d << "\n";
+                // IMPORTANT: hornersRuleAlgorithm() depends on a reversed array of coefficients because we evaluate backward (nested)
+                std::reverse(coeffDeque.begin(),coeffDeque.end());
+                result = hornersRuleAlgorithm(elapsed_time,x,coeffDeque);
                 isFinished = true;
             default:
                 std::cout << "Invalid choice. Please enter a number between 1 and 3.\n";
@@ -154,45 +162,17 @@ int main() {
 
     std::cout << "result = " << result << "\n";
     std::cout << "elapsed time (ms) = " << elapsed_time.count() * 1000 << "\n";
-    std::cout << "DEBUG: PROGRAM END\n";
-
-    /* 
-    DRIVER:
-    MENU:
-        1. GENERATE NEW DATA
-        2. USE EXISTING DATA
-    (1) DO:
-        ASK FOR N and D
-        PASS N and D TO GENERATE COEFF&VAR TO UPDATE DATA
-    (2) SKIP...
-
-    INITIALIZE FILE FOR READING FROM FILEPATH MACRO
-    INITIALIZE DEQUE TO HOLD COEFFICIENTS & X
-    ITERATE THROUGH UNTIL EMTPY:
-        CONVERT THE LINE INTO mpz_class AND STORE IN DEQUE
-
-       *** => make sure to use &reference in range-based for loop later for reading from deque (this might get LARGE for large values n)
-
-    MENU:
-        1. BRUTE
-        2. REPEATED
-        3. HORNERS
-    (1 | 2 | 3) DO:
-        PASS IN DEQUE OF COEFF TO ALGORITHM 
-        START TIMER
-        EVALUATES
-        END TIMER
-
-       *** => will need to re-do the brute force algorithm for general case polynomial using coefficients read from deque
-    
-    */
 
    return 0;
 }
 
-/* This function uses GNU multi-precision to generate and write to an external file:
-    (1) a value 'x' (within the range 1 ... 100 for simplicty)
-    (2) 'n+1' list of 'd'-digit coefficient values (includes the constant term)
+/* GENERATECOEFFANDVARS - this function uses GNU multi-precision to generate and write to an external file:
+    line 1:
+        (1)  a value 'x' (within the range 1 ... 100 for simplicty)
+        (2) value 'n' of the degree polynomial being stored in file
+        (3) value 'd' of the d-digits coefficient values generated to the file
+    lines 2 (onward):
+        (4) 'n+1' list of 'd'-digit coefficient values (includes the constant term)
    This data can then be read to evaluate polynomials P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n */
 void generateCoeffAndVars(int n, int d) {
 
@@ -229,14 +209,18 @@ void generateCoeffAndVars(int n, int d) {
     // generate random value for 'x' & write to file
     std::srand(time(0)); // random seed
     int x = rand() % 100 + 1; // range is from 1 to 100, for simplicity
-    outFile << x << "\n";
+    outFile << x << " ";
+
+    // write in values of n & d
+    outFile << n << " ";
+    outFile << d << "\n";
 
     /* Initialize random state for large random number generation */
     gmp_randstate_t rand_state;
     gmp_randinit_mt(rand_state);  // Mersenne Twister algorithm for random state
     gmp_randseed_ui(rand_state, time(0));  // Seed with the current time
 
-    // determine bit-count for 'd'-digits
+    // determine bit count for 'd'-digits (bit count needed by mpz_rrandomb to generate bit count-sized digits)
     double log2_10 = log(10.0) / log(2.0);
     double bit_count = d * log2_10;
 
@@ -271,6 +255,10 @@ void generateCoeffAndVars(int n, int d) {
     cout << "Process time (ms): " << eval_ms << endl; */
 }
 
+/* BRUTE FORCE ALGORITHM - this function calculates each multiplication of x by hand (i.e. x is multiplied explicitly
+    n-number of times at each degree 'n' of our polynomial). This function uses GNU multiple precision library to handle
+    the large values calculated for each term. Chrono is used to return the evaluation time from beginning of function
+    to the end of the function. */
 mpz_class bruteForceAlgorithm(std::chrono::duration<double>& t, int x, std::deque<mpz_class> coefficients) {
     using namespace std::chrono;
     // EVALUATING: P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n => BRUTE FORCE
@@ -278,17 +266,14 @@ mpz_class bruteForceAlgorithm(std::chrono::duration<double>& t, int x, std::dequ
     // mark the start time of evaluating this algorithm
     time_point<steady_clock> start_time = steady_clock::now();
 
-    // accumulator to be returned
-    mpz_class result;
-
-    // pop the constant (a_0) and add to result
-    result += coefficients.front();
-    coefficients.pop_front();
+    // accumulator to be returned (initialize with constant term)
+    mpz_class result = coefficients.front();
+    coefficients.pop_front(); // pop constant term (a_0)
 
     // counter to keep track of current term
     int degree = 1;
 
-    // loop through each coefficient & calculate each term of polynomial by hand
+    // loop through each term (following the constant) & calculate each term of polynomial by hand
     for (auto& coeff : coefficients) {
         // initialize temp variables to store variable expression (x^n)
         mpz_class var_expr = 1;
@@ -305,25 +290,90 @@ mpz_class bruteForceAlgorithm(std::chrono::duration<double>& t, int x, std::dequ
         result += coeff * var_expr;
     }
 
-    /* PSEUDOCODE:
-        P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n
-        GIVEN: x, deque of mpz_class's
-            - deque.size() = n
-            - will need to loop 'n' times to evaluate, skipping the first when multiplying x
+    // mark the end time of evaluating this algorithm, & update the evaluation time in driver
+    time_point<steady_clock> end_time = steady_clock::now();
+    t = end_time - start_time;
+
+    return result;
+}
+
+/* POWER - this is a helper function to be used by the repeated squaring algorithm. Using this function, we
+    are able to efficiently calculate the power of a given base using GNU multiple precision library to avoid
+    overflow error (as opposed to simply using pow() from <math.h>, which would cause overflow working with
+    extremely large values).
     
-        .mark start time
-        .initialize result variable (mpz_class type)
-        .pop the constant (a_0) and add to result
-        
-        (range-based) for each element of coefficient vectors:
-            use counter 'n' to keep track of degree (starting with n=1, x^1)
-            for each value of n:
-                multiply x by itself to determine x^n (variable expression)
-            calculate term as current coefficient * variable expression
-            add this subexpression (c * x^n) to result
-        mark end time
-        return result
-     */
+    EXAMPLE: when calling power(2,9), we calculate x^9 by first calculating x * x^8, and x^8 is determined by
+    x^4 * x^4, where x^4 is calculated from x^2 * x^2, and x^2 is of course x * x. x is calculated first, then
+    base is incremented to x^8 through squaring. This value for x^8, after calculated, is mutliplied by x */
+mpz_class power(mpz_class base, int exponent) {
+    mpz_class result = 1; // accumulator result
+    
+    while (exponent > 0) {
+        // if exponent is odd
+        if (exponent % 2 == 1) {
+            result *= base; // multiply base into the result
+        }
+
+        // square the base (x = x^2) - repeated squaring
+        base *= base;
+        // divide exponnet (int) by 2
+        exponent /= 2;
+    }
+    return result; // this might be huge number (mpz_class)
+}
+
+/* REPEATED SQUARING ALGOIRHTM - this function calculates each multiplication of x using repeated squaring technique via
+    our helper function power(). This function uses GNU multiple precision library to handle the large values calculated
+    for each term. Chrono is used to return the evaluation time from beginning of function to the end of the function. */
+mpz_class repeatedSquaringAlgorithm(std::chrono::duration<double>& t, int x, const std::deque<mpz_class> coefficients) {
+    using namespace std::chrono;
+    // EVALUATING: P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n => REPEATED SQUARING
+
+    // mark the start time of evaluating this algorithm
+    time_point<steady_clock> start_time = steady_clock::now();
+
+    // accumulator to be returned (initialize with constant term)
+    mpz_class result = coefficients.front();
+
+    // loop through each coefficient starting from the first power (n = 1)
+    for (size_t degree = 1; degree < coefficients.size(); degree++) {
+        const auto& coeff = coefficients[degree]; // access each coefficient in order starting with the second
+        mpz_class var_expr = power(x, degree); // calculate x^degree using repeated squaring
+
+        // add current term to result
+        result += coeff * var_expr;
+    }
+
+    // mark the end time of evaluating this algorithm, & update the evaluation time in driver
+    time_point<steady_clock> end_time = steady_clock::now();
+    t = end_time - start_time;
+
+    return result;
+}
+
+/* HORNERS RULE ALGORITHM - this function applies horner's rule to evaluate a polynomial by nesting the evaluation of
+    x times (*) the previous result added (+) to the next term. This function uses GNU multiple precision library to
+    handle the large values calculated for each term. Chrono is used to return the evaluation time from beginning of
+    function to the end of the function.A properly nested polynomial (using Horner's Rule) appears in the following form:
+
+    P(x) = a_0 + a_1x^1 + a_2x^2 + a_3x^3
+    P(x) = a_0 + x(a_1 + x(a_2 + a_3x)) ... x is multiplied in to a_3 three times (x^3)
+
+    NOTE: due to the nested evaluation of this function, coefficients deque should be passed in backwards!!!*/
+mpz_class hornersRuleAlgorithm(std::chrono::duration<double>& t, int x, const std::deque<mpz_class> coefficients) {
+    using namespace std::chrono;
+    // EVALUATING: P(x) = a_0 + a_1x^1 + a_2x^2 + ... + a_nx^n => HORNER'S RULE
+
+    // mark the start time of evaluating this algorithm
+    time_point<steady_clock> start_time = steady_clock::now();
+
+    // initialize accumulator
+    mpz_class result = 0;
+
+    // evaluating using Horner Rule
+    for (const auto& coeff : coefficients) {
+        result = result * x + coeff; // nested evaluation
+    }
 
     // mark the end time of evaluating this algorithm, & update the evaluation time in driver
     time_point<steady_clock> end_time = steady_clock::now();

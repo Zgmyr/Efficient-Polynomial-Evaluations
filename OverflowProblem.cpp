@@ -19,7 +19,7 @@ int main() {
     cout << "Evaluating P(x,n) = 1 + x + 2x^2 + 3x^2 + ... + nx^n" 
         << "\nObserve overflow for P(123,25):" << endl;
 
-    /* P(x,n) = 1 + x + 2x^2 + 3x^2 + ... + nx^n */
+    /* P(x,n) = 1 + x + 2x^2 + 3x^3 + ... + nx^n */
 
     // Evaluate polynomial for x=1, n=1
     long var1 = testPolynomial(1,1);
